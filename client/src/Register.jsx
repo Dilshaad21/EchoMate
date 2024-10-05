@@ -1,16 +1,23 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import axios from "axios";
+import { UserContext } from "./UserContext";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(true);
 
-  const register = (ev) => {
-    ev.preventDefault()
+  const { setId, setUsername: setLoggedInUsername } = useContext(UserContext);
+
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+    const url = isRegister ? "/register" : "/login";
     axios
-      .post("/register", { username, password })
+      .post(url, { username, password })
       .then((res) => {
-        console.log(`Registered the user successfully. Response ${res}`);
+        const { user } = res.data.data;
+        setLoggedInUsername(user.username);
+        setId(user.id);
       })
       .catch((err) => {
         console.log(err);
@@ -20,7 +27,11 @@ export default function Register() {
   return (
     <>
       <div className="bg-blue-50 h-screen flex items-center">
-        <form action="post" className="w-64 mx-auto mb-12" onSubmit={register}>
+        <form
+          action="post"
+          className="w-64 mx-auto mb-12"
+          onSubmit={handleSubmit}
+        >
           <input
             value={username}
             onChange={(ev) => setUsername(ev.target.value)}
@@ -39,8 +50,37 @@ export default function Register() {
             className="bg-blue-500 text-white block w-full rounded-sm m-2 p-2"
             type="submit"
           >
-            Register
+            {isRegister ? "Register" : "Login"}
           </button>
+          <div className="text-center mt-2">
+            {isRegister ? (
+              <div>
+                Already a member?{" "}
+                <a
+                  href=""
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    setIsRegister(false);
+                  }}
+                >
+                  Login here
+                </a>
+              </div>
+            ) : (
+              <div>
+                Dont have an account?
+                <a
+                  href=""
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    setIsRegister(true);
+                  }}
+                >
+                  Register here
+                </a>
+              </div>
+            )}
+          </div>
         </form>
       </div>
     </>
