@@ -17,5 +17,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+  "devDependencies": {
+    "ws": "^8.18.0"
   }
 }

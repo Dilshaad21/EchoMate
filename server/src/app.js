@@ -35,6 +35,32 @@ app.get(
 );
 
 app.post(
+  "/login",
+  asyncHandler(async (req, res) => {
+    const { username, password } = req.body;
+    const existingUser = await User.findOne({ username });
+
+    if (!existingUser) throw new ApiError(400, "User does not exist");
+
+    if (!existingUser.isPasswordCorrect(password))
+      throw new ApiError(400, "Password is incorrect");
+
+    const accessToken = await existingUser.generateAccessToken();
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, user: existingUser },
+          "Successfully logged in as a user!!"
+        )
+      );
+  })
+);
+
+app.post(
   "/register",
   asyncHandler(async (req, res) => {
     const { username, password } = req.body;
