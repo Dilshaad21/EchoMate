@@ -7,6 +7,7 @@ import { ApiResponse } from "./utils/ApiResponse.js";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { verifyJwt } from "./middlewares/auth.middleware.js";
+import { Message } from "./models/message.model.js";
 
 const app = express();
 const cookieOptions = {
@@ -31,6 +32,34 @@ app.get(
   asyncHandler(async (req, res) => {
     const { username, id } = req;
     res.json(new ApiResponse(200, { username, id }));
+  })
+);
+
+app.get(
+  "/messages/:userId",
+  verifyJwt,
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) throw new ApiError(400, "No user Id given");
+    const senderUserId = req.id;
+    let messages = await Message.find({
+      sender: { $in: [senderUserId, userId] },
+      receiver: { $in: [senderUserId, userId] },
+    }).sort({ createdAt: 1 });
+
+    // Rename `_id` to `id` for each message
+    messages = messages.map((message) => {
+      return {
+        ...message.toObject(), // Convert Mongoose document to plain JS object
+        id: message._id,
+        _id: undefined, // Optionally remove the original _id field
+      };
+    });
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, messages, "Sent available list of messages"));
   })
 );
 
